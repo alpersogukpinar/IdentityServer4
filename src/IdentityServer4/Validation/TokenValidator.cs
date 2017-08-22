@@ -101,8 +101,9 @@ namespace IdentityServer4.Validation
             _log.ClientName = client.ClientName;
             _logger.LogDebug("Client found: {clientId} / {clientName}", client.ClientId, client.ClientName);
 
-            var keys = await _keys.GetValidationKeysAsync();
-            var result = await ValidateJwtAsync(token, clientId, keys, validateLifetime);
+            var validationKeys = await _keys.GetValidationKeysAsync();
+            var decryptionKeys = await _keys.GetDecryptionKeysAsync();
+            var result = await ValidateJwtAsync(token, clientId, validationKeys, decryptionKeys, validateLifetime);
 
             result.Client = client;
 
@@ -162,7 +163,8 @@ namespace IdentityServer4.Validation
                 result = await ValidateJwtAsync(
                     token,
                     string.Format(Constants.AccessTokenAudience, _context.HttpContext.GetIdentityServerIssuerUri().EnsureTrailingSlash()),
-                    await _keys.GetValidationKeysAsync());
+                    await _keys.GetValidationKeysAsync(),
+                    await _keys.GetDecryptionKeysAsync());
             }
             else
             {
@@ -214,7 +216,7 @@ namespace IdentityServer4.Validation
             return customResult;
         }
 
-        private async Task<TokenValidationResult> ValidateJwtAsync(string jwt, string audience, IEnumerable<SecurityKey> validationKeys, bool validateLifetime = true)
+        private async Task<TokenValidationResult> ValidateJwtAsync(string jwt, string audience, IEnumerable<SecurityKey> validationKeys, IEnumerable<SecurityKey> decryptionKeys, bool validateLifetime = true)
         {
             var handler = new JwtSecurityTokenHandler();
             handler.InboundClaimTypeMap.Clear();
@@ -223,8 +225,9 @@ namespace IdentityServer4.Validation
             {
                 ValidIssuer = _context.HttpContext.GetIdentityServerIssuerUri(),
                 IssuerSigningKeys = validationKeys,
+                TokenDecryptionKeys = decryptionKeys,
                 ValidateLifetime = validateLifetime,
-                ValidAudience = audience
+                ValidAudience = audience               
             };
 
             try

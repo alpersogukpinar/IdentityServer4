@@ -105,7 +105,7 @@ namespace IdentityServer4.UnitTests.Validation
 
             return new DefaultTokenCreationService(
                 options,
-                new DefaultKeyMaterialService(new IValidationKeysStore[] { }, new DefaultSigningCredentialsStore(TestCert.LoadSigningCredentials())), TestLogger.Create<DefaultTokenCreationService>());
+                new DefaultKeyMaterialService(new IValidationKeysStore[] { }, new DefaultSigningCredentialsStore(TestCert.LoadSigningCredentials()), new IDecryptionKeysStore[] { }, new DefaultEncryptingCredentialStore(TestCert.LoadEncryptingCredentials())), TestLogger.Create<DefaultTokenCreationService>());
         }
 
         public static AuthorizeRequestValidator CreateAuthorizeRequestValidator(
@@ -187,7 +187,7 @@ namespace IdentityServer4.UnitTests.Validation
                     profile: profile,
                     clients: clients,
                     logger: TestLogger.Create<DefaultCustomTokenValidator>()),
-                    keys: new DefaultKeyMaterialService(new[] { new DefaultValidationKeysStore(new[] { TestCert.LoadSigningCredentials().Key }) }),
+                    keys: new DefaultKeyMaterialService(new[] { new DefaultValidationKeysStore(new[] { TestCert.LoadSigningCredentials().Key }) }, null, new[] { new DefaultDecryptionKeysStore(new[] { TestCert.LoadEncryptingCredentials().Key }) }),
                 logger: logger,
                 options: options,
                 context: context);

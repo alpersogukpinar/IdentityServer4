@@ -16,18 +16,23 @@ namespace IdentityServer4.Services
     public class DefaultKeyMaterialService : IKeyMaterialService
     {
         private readonly ISigningCredentialStore _signingCredential;
-        private readonly IEnumerable<IValidationKeysStore> _validationKeys;
+        private readonly IEnumerable<IValidationKeysStore> _validationKeys;        
+        private readonly IEncryptingCredentialStore _encryptingCredential;
+        private readonly IEnumerable<IDecryptionKeysStore> _decryptionKeys;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DefaultKeyMaterialService"/> class.
         /// </summary>
         /// <param name="validationKeys">The validation keys stores.</param>
         /// <param name="signingCredential">The signing credential store.</param>
-        public DefaultKeyMaterialService(IEnumerable<IValidationKeysStore> validationKeys, ISigningCredentialStore signingCredential = null)
+        public DefaultKeyMaterialService(IEnumerable<IValidationKeysStore> validationKeys, ISigningCredentialStore signingCredential = null, IEnumerable<IDecryptionKeysStore> decryptionKeys = null, IEncryptingCredentialStore encrytingCredential = null)
         {
             _signingCredential = signingCredential;
             _validationKeys = validationKeys;
+            _decryptionKeys = decryptionKeys;
+            _encryptingCredential = encrytingCredential;
         }
+    
 
         /// <summary>
         /// Gets the signing credentials.
@@ -54,6 +59,36 @@ namespace IdentityServer4.Services
             foreach (var store in _validationKeys)
             {
                 keys.AddRange(await store.GetValidationKeysAsync());
+            }
+
+            return keys;
+        }        
+
+        /// <summary>
+        /// Gets the encrypting credentials.
+        /// </summary>
+        /// <returns></returns>
+        public async Task<EncryptingCredentials> GetEncryptingCredentialsAsync()
+        {
+            if (_encryptingCredential != null)
+            {
+                return await _encryptingCredential.GetEncryptingCredentialsAsync();
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Gets all decryption keys
+        /// </summary>
+        /// <returns></returns>
+        public async Task<IEnumerable<SecurityKey>> GetDecryptionKeysAsync()
+        {
+            var keys = new List<SecurityKey>();
+
+            foreach (var store in _decryptionKeys)
+            {
+                keys.AddRange(await store.GetDecryptionKeysAsync());
             }
 
             return keys;

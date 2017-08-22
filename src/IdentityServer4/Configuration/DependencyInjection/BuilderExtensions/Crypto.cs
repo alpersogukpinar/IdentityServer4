@@ -6,13 +6,13 @@ using IdentityModel;
 using IdentityServer4.Stores;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using System;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
-using Newtonsoft.Json.Serialization;
 using CryptoRandom = IdentityModel.CryptoRandom;
 
 namespace Microsoft.Extensions.DependencyInjection
@@ -237,6 +237,36 @@ namespace Microsoft.Extensions.DependencyInjection
             if (certificate == null) throw new InvalidOperationException($"certificate: '{name}' not found in certificate store");
 
             return builder.AddValidationKey(certificate);
+        }
+
+        /// <summary>
+        /// Sets encrypting credentials
+        /// </summary>
+        /// <param name="builder">The builder.</param>
+        /// <param name="credential">The credential.</param>
+        /// <returns></returns>
+        public static IIdentityServerBuilder AddEncryptingCredential(this IIdentityServerBuilder builder, EncryptingCredentials credential)
+        {
+            //TODO:AS - refactor checking credentials
+            if (!(credential.Key is SymmetricSecurityKey))
+            {
+                throw new InvalidOperationException("Encrypting key is not symmetric");
+            }
+
+            builder.Services.AddSingleton<IEncryptingCredentialStore>(new DefaultEncryptingCredentialStore(credential));           
+            return builder;
+        }
+
+        /// <summary>
+        /// Adds the decryption keys.
+        /// </summary>
+        /// <param name="builder">The builder.</param>
+        /// <param name="keys">The keys.</param>
+        /// <returns></returns>
+        public static IIdentityServerBuilder AddDecriyptionKeys(this IIdentityServerBuilder builder, params SymmetricSecurityKey[] keys)
+        {
+            builder.Services.AddSingleton<IDecryptionKeysStore>(new DefaultDecryptionKeysStore(keys));
+            return builder;
         }
 
         private static X509Certificate2 FindCertificate(string name, StoreLocation location, NameType nameType)

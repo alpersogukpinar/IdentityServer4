@@ -6,6 +6,7 @@ using Microsoft.Extensions.PlatformAbstractions;
 using Microsoft.IdentityModel.Tokens;
 using System.IO;
 using System.Security.Cryptography.X509Certificates;
+using System.Text;
 
 namespace IdentityServer4.UnitTests.Common
 {
@@ -21,6 +22,13 @@ namespace IdentityServer4.UnitTests.Common
         {
             var cert = Load();
             return new SigningCredentials(new X509SecurityKey(cert), "RS256");
+        }
+
+        public static EncryptingCredentials LoadEncryptingCredentials()
+        {
+            var encryptionKey = new Microsoft.IdentityModel.Tokens.SymmetricSecurityKey(Encoding.Default.GetBytes("KmjEOLl5e_q3RdCK"));
+            return new EncryptingCredentials(encryptionKey, Microsoft.IdentityModel.Tokens.SecurityAlgorithms.Aes128KW, Microsoft.IdentityModel.Tokens.SecurityAlgorithms.Aes128CbcHmacSha256);
+
         }
     }
 }

@@ -51,6 +51,7 @@ namespace IdentityServer4.Services
             Logger = logger;
         }
 
+        //TODO:AS - Refactor CreateTokenAsync this method....
         /// <summary>
         /// Creates the token.
         /// </summary>
@@ -60,10 +61,25 @@ namespace IdentityServer4.Services
         /// </returns>
         public virtual async Task<string> CreateTokenAsync(Token token)
         {
+            
             var header = await CreateHeaderAsync(token);
             var payload = await CreatePayloadAsync(token);
 
-            return await CreateJwtAsync(new JwtSecurityToken(header, payload));
+            var encryptionCredentials = await Keys.GetEncryptingCredentialsAsync();
+            if (encryptionCredentials != null)
+            {
+                var signingCredentials = await Keys.GetSigningCredentialsAsync();
+                string audience = token.Audiences != null ? token.Audiences.First<string>() : null;
+                var handler = new JwtSecurityTokenHandler();
+
+                JwtSecurityToken jwtSecurityToken = handler.CreateJwtSecurityToken(token.Issuer, audience, new ClaimsIdentity(payload.Claims), DateTime.Now, DateTime.Now.AddSeconds(token.Lifetime), DateTime.Now, signingCredentials, encryptionCredentials);
+
+                return await CreateJwtAsync(jwtSecurityToken);
+            }
+            else
+            {
+                return await CreateJwtAsync(new JwtSecurityToken(header, payload));
+            }
         }
 
         /// <summary>

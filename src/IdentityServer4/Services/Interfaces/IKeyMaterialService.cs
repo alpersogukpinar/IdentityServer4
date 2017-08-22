@@ -23,6 +23,17 @@ namespace IdentityServer4.Services
         /// Gets the signing credentials.
         /// </summary>
         /// <returns></returns>
-        Task<SigningCredentials> GetSigningCredentialsAsync();
+        Task<SigningCredentials> GetSigningCredentialsAsync();       
+
+        //
+        // Summary:
+        //     Gets all decryption keys.
+        Task<IEnumerable<SecurityKey>> GetDecryptionKeysAsync();
+
+        /// <summary>
+        /// Gets the encrypting credentials.
+        /// </summary>
+        /// <returns></returns>
+        Task<EncryptingCredentials> GetEncryptingCredentialsAsync();
     }
 }
